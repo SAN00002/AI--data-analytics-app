@@ -13,6 +13,20 @@ if uploaded_file:
     agent = DataAgent("temp.csv")
     df = agent.df.copy()
     
+    st.subheader("📄 Download Summary Report")
+
+    if st.button("Generate PDF Report"):
+      file_path = agent.generate_pdf_report()
+
+      with open(file_path, "rb") as file:
+        st.download_button(
+            label="⬇️ Download Report",
+            data=file,
+            file_name="data_analysis_report.pdf",
+            mime="application/pdf"
+        )
+
+    
     
     st.subheader("🎛️ Data Filters")
 
