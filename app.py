@@ -11,15 +11,16 @@ if uploaded_file:
         f.write(uploaded_file.getbuffer())
 
     agent = DataAgent("temp.csv")
+    df = agent.df.copy()
     
     
     st.subheader("🎛️ Data Filters")
 
-df = agent.df.copy()
 
-for col in df.select_dtypes(include="object").columns:
-    selected = st.multiselect(f"Filter {col}", df[col].unique())
-    if selected:
+
+    for col in df.select_dtypes(include="object").columns:
+      selected = st.multiselect(f"Filter {col}", df[col].unique())
+      if selected:
         df = df[df[col].isin(selected)]
 
     st.write("Filtered Data Preview")
