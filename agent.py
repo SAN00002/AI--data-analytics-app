@@ -1,7 +1,8 @@
 import pandas as pd
 import matplotlib.pyplot as plt
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer , Table,TableStyle
 from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib import colors
 
 
 class DataAgent:
@@ -108,20 +109,51 @@ class DataAgent:
         return "Try asking about averages, max, min, or columns."
 
 
+    
+
     def generate_pdf_report(self):
         doc = SimpleDocTemplate("report.pdf")
         styles = getSampleStyleSheet()
         elements = []
 
+        # Title
         elements.append(Paragraph("Data Analysis Report", styles["Title"]))
         elements.append(Spacer(1, 12))
 
+        # Overview
+        elements.append(Paragraph("Dataset Overview", styles["Heading2"]))
         elements.append(Paragraph(self.get_overview(), styles["Normal"]))
         elements.append(Spacer(1, 12))
 
+        # Summary table
         elements.append(Paragraph("Summary Statistics", styles["Heading2"]))
-        elements.append(Paragraph(self.df.describe().to_string(), styles["Normal"]))
+        summary = self.df.describe().round(2)
+
+        table_data = [ ["Metric"] + list(summary.columns) ]
+
+        for idx, row in summary.iterrows():
+           table_data.append([idx] + row.tolist())
+
+        table = Table(table_data)
+
+        table.setStyle(TableStyle([
+           ("BACKGROUND", (0,0), (-1,0), colors.grey),
+           ("TEXTCOLOR", (0,0), (-1,0), colors.whitesmoke),
+           ("GRID", (0,0), (-1,-1), 1, colors.black),
+           ("FONTNAME", (0,0), (-1,0), "Helvetica-Bold"),
+           ("ALIGN", (1,1), (-1,-1), "CENTER")
+        ]))
+
+        elements.append(table)
+        elements.append(Spacer(1, 12))
+
+        # Insights
+        elements.append(Paragraph("Key Insights", styles["Heading2"]))
+        insights = self.generate_insights()
+
+        for insight in insights:
+           elements.append(Paragraph(f"• {insight}", styles["Normal"]))
 
         doc.build(elements)
+
         return "report.pdf"
-   
