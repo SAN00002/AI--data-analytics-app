@@ -108,6 +108,26 @@ class DataAgent:
 
         return "Try asking about averages, max, min, or columns."
 
+    def generate_executive_summary(self):
+       rows, cols = self.df.shape
+
+       summary = f"The dataset contains {rows} records across {cols} variables. "
+
+       # Missing values
+       missing_total = self.df.isnull().sum().sum()
+       if missing_total > 0:
+        summary += f"There are {missing_total} missing values that may require cleaning. "
+
+       # Numeric trends
+       numeric_cols = self.df.select_dtypes(include="number").columns
+       if len(numeric_cols) > 0:
+         variances = self.df[numeric_cols].var()
+         highest_var = variances.idxmax()
+         summary += f"The variable '{highest_var}' shows the highest variability, indicating significant fluctuations. "
+
+       summary += "Overall, the dataset appears suitable for exploratory analysis and modeling."
+
+       return summary
 
     
 
@@ -118,6 +138,11 @@ class DataAgent:
 
         # Title
         elements.append(Paragraph("Data Analysis Report", styles["Title"]))
+        elements.append(Spacer(1, 12))
+
+        # Executive Summary
+        elements.append(Paragraph("Executive Summary", styles["Heading2"]))
+        elements.append(Paragraph(self.generate_executive_summary(), styles["Normal"]))
         elements.append(Spacer(1, 12))
 
         # Overview
