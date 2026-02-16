@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer , Table,TableStyle
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib import colors
+from reportlab.platypus import Image 
 
 
 class DataAgent:
@@ -144,10 +145,40 @@ class DataAgent:
         elements.append(Paragraph("Executive Summary", styles["Heading2"]))
         elements.append(Paragraph(self.generate_executive_summary(), styles["Normal"]))
         elements.append(Spacer(1, 12))
+        
+        # Trend Interpretation
+        elements.append(Paragraph("Trend Interpretation", styles["Heading2"]))
+        interpretations = self.generate_trend_interpretation()
+
+        for text in interpretations:
+          elements.append(Paragraph(f"• {text}", styles["Normal"]))
+
+        elements.append(Spacer(1, 12))
+
 
         # Overview
         elements.append(Paragraph("Dataset Overview", styles["Heading2"]))
         elements.append(Paragraph(self.get_overview(), styles["Normal"]))
+        elements.append(Spacer(1, 12))
+        
+        
+        # Charts Section
+        elements.append(Paragraph("Visualizations", styles["Heading2"]))
+        elements.append(Spacer(1, 10))
+
+        numeric_cols = self.df.select_dtypes(include="number").columns[:3]
+ 
+        for col in numeric_cols:
+          chart_path = f"{col}_chart.png"
+
+        # create chart image
+        self.df[col].plot(title=col)
+        plt.tight_layout()
+        plt.savefig(chart_path)
+        plt.clf()
+
+        elements.append(Paragraph(col, styles["Heading3"]))
+        elements.append(Image(chart_path, width=400, height=200))
         elements.append(Spacer(1, 12))
 
         # Summary table
@@ -182,3 +213,19 @@ class DataAgent:
         doc.build(elements)
 
         return "report.pdf"
+    def generate_trend_interpretation(self):
+       numeric_cols = self.df.select_dtypes(include="number").columns
+       interpretations = []
+
+       for col in numeric_cols[:3]:
+          mean_val = self.df[col].mean()
+          median_val = self.df[col].median()
+
+          if mean_val > median_val:
+            interpretations.append(f"{col} shows a slight upward skew, indicating higher extreme values.")
+          elif mean_val < median_val:
+            interpretations.append(f"{col} shows a slight downward skew, suggesting lower outliers.")
+          else:
+            interpretations.append(f"{col} appears symmetrically distributed.")
+
+       return interpretations
